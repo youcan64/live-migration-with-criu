@@ -18,11 +18,11 @@ int main() {
 毎秒数値を出力する。
 
 - 本来の出力
-```
-ysk@ysk-pc:~/live-migration/CRIU$ rm a.out 
-ysk@ysk-pc:~/live-migration/CRIU$ rm loop
-ysk@ysk-pc:~/live-migration/CRIU$ gcc loop.c 
-ysk@ysk-pc:~/live-migration/CRIU$ ./a.out
+```sh
+$ rm a.out 
+$ rm loop
+$ gcc loop.c 
+$ ./a.out
 0
 1
 2
@@ -43,10 +43,10 @@ ysk@ysk-pc:~/live-migration/CRIU$ ./a.out
 
 まずはターミナルAでプログラムを起動
 
-```
-ysk@ysk-pc:~/live-migration/CRIU$ ./a.out &
+```sh
+$ ./a.out &
 [1] 14117
-ysk@ysk-pc:~/live-migration/CRIU$ 0
+$ 0
 1
 2
 3
@@ -55,9 +55,9 @@ ysk@ysk-pc:~/live-migration/CRIU$ 0
 &オプションによってバックグラウンド実行され、プロセス番号が表示される。
 
 このプロセス番号をターミナルBで入力、checkpointを作成する。
-```
-ysk@ysk-pc:~/live-migration/CRIU$ mkdir out
-ysk@ysk-pc:~/live-migration/CRIU$ sudo criu dump -t 14117 -j -o ./dump.log -D out
+```sh
+$ mkdir out
+$ sudo criu dump -t 14117 -j -o ./dump.log -D out
 ```
 `-t`でプロセス番号を指定。`-j`はシェルから実行したジョブであることを示す。`-o`でログファイルの出力ファイルを指定。
 
@@ -65,7 +65,7 @@ ysk@ysk-pc:~/live-migration/CRIU$ sudo criu dump -t 14117 -j -o ./dump.log -D ou
 
 outディレクトリ内にcheckpointのイメージファイルが作成されたので、ターミナルAでrestoreしてやる。
 
-```s
+```sh
 $ sudo criu restore -j -D out
 5
 6
@@ -95,13 +95,29 @@ if __name__ == "__main__":
 ```
 今回は標準出力を利用しないので、単一ターミナルで作業が可能。
 
-```s
+```sh
 $ python write_file.py &
 [1] 16743
 $ sudo criu dump -t 16743 --shell-job -o ./dump.log -D out
 [1]+  強制終了            python write_file.py
+$ cat output.txt
+$ sudo criu restore -j -D out
 $ cat output.txt 
+0
+1
+2
+3
+4
+5
+6
+7
+8
+9
+$
 ```
+特にエラー等は起こらず。dump後catしてもoutputに何も入っていないのは、Pythonのファイルへの書き込みはバッファに保存されてからまとめて行われるためである。[flush()](http://www.yamamo10.jp/yamamoto/comp/Python/file/index.php)を用いるとバッファに溜め込まず、即座に書き込みされる。
+
+## 実験1-3 カメラから
 
 # 参考にしたサイト
 [libcriu でプロセスの checkpoint と restore をやってみる](https://blog.ssrf.in/post/try-checkpoint-and-restore-the-process-with-criu/)
